@@ -1,1 +1,1 @@
-# vcs-stratos
+# vcs-stratus
