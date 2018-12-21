@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  vcs-stratus
+  SAM template for deploying Stratus chatbot service in AWS.
+  This template creates the following resources:
+  - API gateway to forward request to the lambda function
+  - Lambda function to handle requests to the chatbot
+  - Lambda execution role for API Gateway to invoke the lambda function
+  - Permission for the lambda function to create logs
+
+# More info about Globals:
+# https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 3
+
+
+Parameters:
+  BrokerURI:
+    Type: String
+  BrokerKey:
+    Type: String
+    Description: ID of Here app.
+  BrokerSecret:
+    NoEcho: true
+    Type: String
+    Description: Secret code of Here app.
+  DialogflowApiKey:
+    NoEcho: true
+    Type: String
+    Description: Dialogflow API Key
+  SlackAppId:
+    Type: String
+  SlackClientId:
+    Type: String
+  SlackClientSecret:
+    NoEcho: true
+    Type: String
+  SlackSigningSecret:
+    NoEcho: true
+    Type: String
+  SlackVerificationToken:
+    Type: String
+
+
+Resources:
+
+  # API definition in API Gateway
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      DefinitionBody:
+        swagger: 2.0
+        info:
+          title: StratusApi
+        basePath: /Prod
+        schemes:
+        - https
+        paths:
+          /:
+            x-amazon-apigateway-any-method:
+              produces:
+              - application/json
+              responses:
+                '200':
+                  description: 200 response
+                  schema:
+                    $ref: "#/definitions/Empty"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: 200
+                uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${!stageVariables.FunctionName}/invocations"
+                passthroughBehavior: when_no_match
+                httpMethod: POST
+                type: aws_proxy
+          /{proxy+}:
+            x-amazon-apigateway-any-method:
+              produces:
+              - application/json
+              parameters:
+              - name: proxy
+                in: path
+                required: true
+                type: string
+              responses: {}
+              x-amazon-apigateway-integration:
+                uri: !Sub "arn:${AWS::Partition}:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:${!stageVariables.FunctionName}/invocations"
+                httpMethod: POST
+                type: aws_proxy
+        x-amazon-apigateway-binary-media-types:
+          - '*/*'
+        definitions:
+          Empty:
+            type: object
+            title: Empty Schema
+
+      Variables:
+        FunctionName: !Ref StratusFunction
+
+
+  # This is the role the Lambda assumes when invoked
+  ExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Path: "/"
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
+
+
+  # This grants permission to API Gateway to invoke Lambda function
+  ApiGatewayExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt StratusFunction.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/*/*"
+
+
+  StratusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: lambda.handler
+      Role: !GetAtt ExecutionRole.Arn
+      Runtime: nodejs8.10
+      Timeout: 3
+      MemorySize: 512
+      Environment:
+        Variables:
+          BROKER_URI: !Ref BrokerURI
+          BROKER_KEY: !Ref BrokerKey
+          BROKER_SECRET: !Ref BrokerSecret
+          DIALOGFLOW_API_KEY: !Ref DialogflowApiKey
+          SLACK_APP_ID: !Ref SlackAppId
+          SLACK_CLIENT_ID: !Ref SlackClientId
+          SLACK_CLIENT_SECRET: !Ref SlackClientSecret
+          SLACK_SIGNING_SECRET: !Ref SlackSigningSecret
+          SLACK_VERIFICATION_TOKEN: !Ref SlackVerificationToken
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /
+            Method: any
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /{proxy+}
+            Method: any
+
+
+Outputs:
+
+  ApiUrl:
+    Description: Invoke URL for your API. Clicking this link will perform a GET request
+      on the root resource of your API.
+    Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+
+  ApiGatewayApiConsoleUrl:
+    Description: Console URL for the API Gateway API's Stage.
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/apigateway/home?region=${AWS::Region}#/apis/${ApiGatewayApi}/stages/Prod"
+
+  FunctionArn:
+    Description: "Lambda Function ARN"
+    Value: !GetAtt StratusFunction.Arn
+
+  FunctionIamRole:
+    Description: "IAM Role created for  Lambda Function"
+    Value: !GetAtt ExecutionRole.Arn
