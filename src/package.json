@@ -3,14 +3,28 @@
   "version": "1.0.0",
   "description": "",
   "main": "lambda.js",
-  "scripts": {},
+  "scripts": {
+    "test": "mocha tests/unit/",
+    "package": "sam package --template-file ../template.yaml --output-template-file ../packaged.yaml --s3-bucket $Bucket",
+    "deploy": "sam deploy --template-file ../packaged.yaml --stack-name $Stack --capabilities CAPABILITY_IAM --parameter-overrides BrokerURI=BrokerURI BrokerKey=$BrokerKey BrokerSecret=$BrokerSecret DialogflowApiKey=$DialogflowApiKey SlackAppId=$SlackAppId SlackClientId=$SlackClientId SlackClientSecret=$SlackClientSecret SlackSigningSecret=$SlackSigningSecret=$SlackVerificationToken=$SlackVerificationToken"
+  },
   "dependencies": {
     "aws-serverless-express": "^3.3.5",
+    "axios": "^0.18.0",
     "cors": "^2.8.5",
     "express": "^4.16.4",
+    "lodash": "^4.17.11",
     "morgan": "^1.9.1",
     "nconf": "^0.10.0",
     "winston": "^3.1.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "mocha": "^5.2.0",
+    "moxios": "^0.4.0",
+    "rewire": "^4.0.1",
+    "sinon": "^7.2.2",
+    "sinon-chai": "^3.3.0",
+    "supertest": "^3.3.0"
+  }
 }

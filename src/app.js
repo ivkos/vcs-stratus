@@ -6,6 +6,7 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 
+const { logger, } = require('./lib')
 const routes = require('./routes')
 
 // create app
@@ -13,7 +14,7 @@ const app = express()
 
 // setup middleware
 app.use(cors())
-app.use(morgan('combined'))
+app.use(morgan('combined', { 'stream': logger.stream }))
 app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ extended: false }))
 
