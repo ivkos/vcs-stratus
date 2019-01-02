@@ -65,3 +65,6 @@ packaged.yaml
 
 # OS-specific files
 .DS_Store
+
+# Ignore files
+.ignore

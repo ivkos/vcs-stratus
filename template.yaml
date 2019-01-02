@@ -174,8 +174,7 @@ Resources:
 Outputs:
 
   ApiUrl:
-    Description: Invoke URL for your API. Clicking this link will perform a GET request
-      on the root resource of your API.
+    Description: Invoke URL for your API.
     Value: !Sub "https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
 
   ApiGatewayApiConsoleUrl:
