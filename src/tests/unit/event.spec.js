@@ -1,105 +1,106 @@
+const nconf = require('nconf')
+const _ = require('lodash')
 const AWS = require('aws-sdk')
 const AWSMock = require('aws-sdk-mock')
-const _ = require('lodash')
 const chai = require('chai')
 const request = require('supertest')
 const sinon = require('sinon')
 const should = chai.should()
 const expect = chai.expect
 const moxios = require('moxios')
+const url = require('url')
 
+const event = require('../../event')
 
-// describe('Tests routes', function () {
+const MESSAGE_IM = {
+    client_msg_id: "36110ae8-1390-4be7-a62b-f3ee1e366c9b",
+    type: "message",
+    text: "bot, what's up",
+    user: "ABCDEFGHI",
+    ts: "1546451063.000200",
+    channel: "DEBB19E1K",
+    event_ts: "1546451063.000200",
+    channel_type: "im"
+}
 
-//     const app = expressApp([routes])
-//     beforeEach(() => moxios.install())
-//     afterEach(() => moxios.uninstall())
+const MESSAGE_CHANNEL = {
+    client_msg_id: "a12adaad-87bf-4c47-b31a-ce9ca3c012c9",
+    type: "message",
+    text: "bot, go ahead",
+    user: "ABCDEFGHI",
+    ts: "1546451226.015300",
+    channel: "ABCDEFGHI",
+    event_ts: "1546451226.015300",
+    channel_type: "channel"
+}
 
-//     it('GET /', async () => {
+describe('event.js', function () {
 
-//         const res = await request(app)
-//         .get('/')
+    beforeEach(() => moxios.install())
+    afterEach(() => moxios.uninstall())
 
-//         res.status.should.equal(200)
-//     })
+    it('channel message', async () => {
 
-//     it('POST / url_verification', async () => {
+        let params = null
 
-//         const res = await request(app)
-//         .post('/')
-//         .send({
-//             token: 'some-token',
-//             challenge: 'some-challenge',
-//             type: 'url_verification'
-//         })
+        moxios.wait(() => {
+            let request = moxios.requests.mostRecent()
+            params = new url.URLSearchParams(url.parse(request.url).query)
+            request.respondWith({
+                status: 200,
+                response: {
+                    ok: true,
+                    channel: params.get('channel'),
+                    ts: Date.now().toString(),
+                    message: {
+                        text: params.get('text'),
+                        username: 'ecto1',
+                        bot_id: 'B19LU7CSY',
+                        attachments: [],
+                        type: 'message',
+                        subtype: 'bot_message',
+                        ts: Date.now().toString()
+                    }
+                }
+            })
+        })
 
-//         res.status.should.equal(200)
-//         res.text.should.equal('some-challenge')
+        await event.handler({ Records: [{ body: JSON.stringify(MESSAGE_CHANNEL) }] })
+        params.get('channel').should.equal(MESSAGE_CHANNEL.channel)
+        params.get('token').should.equal(nconf.get('BOT_USER_TOKEN'))
 
-//     })
+    })
 
-//     it('POST / unknown', async () => {
+    it('direct message', async () => {
 
-//         const res = await request(app)
-//         .post('/')
-//         .send({ type: 'unknown' })
+        let params = null
 
-//         res.status.should.equal(400)
-//         res.body.status.should.equal('error')
+        moxios.wait(() => {
+            let request = moxios.requests.mostRecent()
+            params = new url.URLSearchParams(url.parse(request.url).query)
+            request.respondWith({
+                status: 200,
+                response: {
+                    ok: true,
+                    channel: params.get('channel'),
+                    ts: Date.now().toString(),
+                    message: {
+                        text: params.get('text'),
+                        username: 'ecto1',
+                        bot_id: 'B19LU7CSY',
+                        attachments: [],
+                        type: 'message',
+                        subtype: 'bot_message',
+                        ts: Date.now().toString()
+                    }
+                }
+            })
+        })
 
-//     })
+        await event.handler({ Records: [{ body: JSON.stringify(MESSAGE_IM) }] })
+        params.get('channel').should.equal(MESSAGE_IM.channel)
+        params.get('token').should.equal(nconf.get('BOT_USER_TOKEN'))
 
-//     it('POST / event_callback', async () => {
+    })
 
-//         moxios.stubRequest(/\/api\/chat.postMessage/, {
-//             status: 200,
-//             response: {
-//                 ok: true,
-//                 channel: 'C1H9RESGL',
-//                 ts: '1503435956.000247',
-//                 message: {
-//                     text: "Here's a message for you",
-//                     username: 'ecto1',
-//                     bot_id: 'B19LU7CSY',
-//                     attachments: [{
-//                         text: 'This is an attachment',
-//                         id: 1,
-//                         fallback: "This is an attachment's fallback"
-//                     }],
-//                     type: 'message',
-//                     subtype: 'bot_message',
-//                     ts: '1503435956.000247'
-//                 }
-//             }
-//         })
-
-//         const res = await request(app)
-//         .post('/')
-//         .send({
-//             token: 'same-token',
-//             team_id: '123456789',
-//             api_app_id: 'ABCDEFGHI',
-//             event: {
-//                 client_msg_id: '5e33bc80-0839-421e-9ff9-3426a7beac63',
-//                 type: 'message',
-//                 text: 'bot, go ahead',
-//                 user: 'A1B2C3D4E',
-//                 ts: '1546432717.003800',
-//                 channel: 'ZXYGKKGVK',
-//                 event_ts: '1546432717.003800',
-//                 channel_type: 'channel'
-//             },
-//             type: 'event_callback',
-//             event_id: 'EvF510L537',
-//             event_time: 1546432717,
-//             authed_users: [
-//                 'A1B2C3D4E'
-//             ]
-//         })
-
-//         res.status.should.equal(200)
-//         res.body.status.should.equal('ok')
-
-//     })
-
-// })
+})
