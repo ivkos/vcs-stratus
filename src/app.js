@@ -5,9 +5,15 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const AWS = require('aws-sdk')
+const Promise = require('bluebird')
 
 const { logger, } = require('./lib')
 const routes = require('./routes')
+
+// configure AWS
+AWS.Promise = Promise
+const sqs = new AWS.SQS()
 
 // create app
 const app = express()
@@ -19,7 +25,7 @@ app.use(bodyParser.json({ limit: '50mb' }))
 app.use(bodyParser.urlencoded({ extended: false }))
 
 // route all requests to routes
-routes(app)
+routes(sqs, app)
 
 // catch 404 and forward it to error handler
 app.use((req, res, next) => {

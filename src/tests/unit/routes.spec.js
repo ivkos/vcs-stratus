@@ -1,4 +1,6 @@
 const _ = require('lodash')
+const AWS = require('aws-sdk')
+const AWSMock = require('aws-sdk-mock')
 const chai = require('chai')
 const request = require('supertest')
 const sinon = require('sinon')
@@ -11,11 +13,13 @@ const routes = require('../../routes.js')
 
 describe('Tests routes', function () {
 
-    const app = expressApp([routes])
     beforeEach(() => moxios.install())
     afterEach(() => moxios.uninstall())
 
     it('GET /', async () => {
+
+        const sqs = new AWS.SQS()
+        const app = expressApp([routes.bind(routes, sqs)])
 
         const res = await request(app)
         .get('/')
@@ -24,6 +28,9 @@ describe('Tests routes', function () {
     })
 
     it('POST / url_verification', async () => {
+
+        const sqs = new AWS.SQS()
+        const app = expressApp([routes.bind(routes, sqs)])
 
         const res = await request(app)
         .post('/')
@@ -40,6 +47,9 @@ describe('Tests routes', function () {
 
     it('POST / unknown', async () => {
 
+        const sqs = new AWS.SQS()
+        const app = expressApp([routes.bind(routes, sqs)])
+
         const res = await request(app)
         .post('/')
         .send({ type: 'unknown' })
@@ -51,27 +61,13 @@ describe('Tests routes', function () {
 
     it('POST / event_callback', async () => {
 
-        moxios.stubRequest(/\/api\/chat.postMessage/, {
-            status: 200,
-            response: {
-                ok: true,
-                channel: 'C1H9RESGL',
-                ts: '1503435956.000247',
-                message: {
-                    text: "Here's a message for you",
-                    username: 'ecto1',
-                    bot_id: 'B19LU7CSY',
-                    attachments: [{
-                        text: 'This is an attachment',
-                        id: 1,
-                        fallback: "This is an attachment's fallback"
-                    }],
-                    type: 'message',
-                    subtype: 'bot_message',
-                    ts: '1503435956.000247'
-                }
-            }
+        // create mocks
+        AWSMock.mock('SQS', 'sendMessage', (params, cb) => {
+            cb(null, {})
         })
+
+        const sqs = new AWS.SQS()
+        const app = expressApp([routes.bind(routes, sqs)])
 
         const res = await request(app)
         .post('/')
@@ -96,6 +92,9 @@ describe('Tests routes', function () {
                 'A1B2C3D4E'
             ]
         })
+
+        // restore mocks
+        AWSMock.restore('SQS', 'sendMessage')
 
         res.status.should.equal(200)
         res.body.status.should.equal('ok')

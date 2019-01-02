@@ -6,8 +6,7 @@ Description: >
   This template creates the following resources:
   - API gateway to forward request to the lambda function
   - Lambda function to handle requests to the chatbot
-  - Lambda execution role for API Gateway to invoke the lambda function
-  - Permission for the lambda function to create logs
+  - Lambda function to handle message events
 
 # More info about Globals:
 # https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
@@ -90,60 +89,24 @@ Resources:
             title: Empty Schema
 
       Variables:
-        FunctionName: !Ref StratusFunction
+        FunctionName: !Ref BotFunction
 
 
-  # This is the role the Lambda assumes when invoked
-  ExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          Effect: Allow
-          Principal:
-            Service: lambda.amazonaws.com
-          Action: sts:AssumeRole
-      Path: "/"
-      Policies:
-      - PolicyName: root
-        PolicyDocument:
-          Version: '2012-10-17'
-          Statement:
-          - Effect: Allow
-            Action:
-            - logs:CreateLogGroup
-            - logs:CreateLogStream
-            - logs:PutLogEvents
-            Resource: !Sub "arn:${AWS::Partition}:logs:*:*:*"
-
-
-  # This grants permission to API Gateway to invoke Lambda function
-  ApiGatewayExecutionPermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: lambda:InvokeFunction
-      FunctionName: !GetAtt StratusFunction.Arn
-      Principal: apigateway.amazonaws.com
-      SourceArn: !Sub "arn:${AWS::Partition}:execute-api:${AWS::Region}:${AWS::AccountId}:${ApiGatewayApi}/*/*"
-
-
-  StratusFunction:
+  BotFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: src/
       Handler: lambda.handler
-      Role: !GetAtt ExecutionRole.Arn
       Runtime: nodejs8.10
       Timeout: 3
       MemorySize: 512
       Environment:
         Variables:
-          BROKER_URI: !Ref BrokerURI
-          BROKER_KEY: !Ref BrokerKey
-          BROKER_SECRET: !Ref BrokerSecret
-          DIALOGFLOW_API_KEY: !Ref DialogflowApiKey
-          BOT_USER_TOKEN: !Ref BotUserToken
+          EVENT_QUEUE: !Ref EventQueue
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName:
+              !GetAtt EventQueue.QueueName
       Events:
         ProxyApiRoot:
           Type: Api
@@ -159,6 +122,34 @@ Resources:
             Method: any
 
 
+  EventFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: event.handler
+      Runtime: nodejs8.10
+      Timeout: 30
+      MemorySize: 512
+      Environment:
+        Variables:
+          BROKER_URI: !Ref BrokerURI
+          BROKER_KEY: !Ref BrokerKey
+          BROKER_SECRET: !Ref BrokerSecret
+          DIALOGFLOW_API_KEY: !Ref DialogflowApiKey
+          BOT_USER_TOKEN: !Ref BotUserToken
+      Events:
+        MessageEvent:
+          Type: SQS
+          Properties:
+            Queue: !GetAtt EventQueue.Arn
+            BatchSize: 10
+
+
+  EventQueue:
+    Type: 'AWS::SQS::Queue'
+    Properties: {}
+
+
 Outputs:
 
   ApiUrl:
@@ -169,10 +160,11 @@ Outputs:
     Description: Console URL for the API Gateway API's Stage.
     Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/apigateway/home?region=${AWS::Region}#/apis/${ApiGatewayApi}/stages/Prod"
 
-  FunctionArn:
-    Description: "Lambda Function ARN"
-    Value: !GetAtt StratusFunction.Arn
+  BotFunctionArn:
+    Description: "Bot Function ARN"
+    Value: !GetAtt BotFunction.Arn
 
-  FunctionIamRole:
-    Description: "IAM Role created for  Lambda Function"
-    Value: !GetAtt ExecutionRole.Arn
+  EventFunctionArn:
+    Description: "Event Function ARN"
+    Value: !GetAtt EventFunction.Arn
+

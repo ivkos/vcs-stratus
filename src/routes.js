@@ -1,11 +1,9 @@
 const express = require('express')
-const axios = require('axios')
 const nconf = require('nconf')
 const { logger, } = require('./lib')
 
-const SLACK_URL = 'https://slack.com/api/chat.postMessage'
 
-module.exports = function(app) {
+module.exports = function(sqs, app) {
 
     const router = express.Router()
     app.use('/', router)
@@ -31,8 +29,7 @@ module.exports = function(app) {
                 // please Slack with "swift response"
                 case 'event_callback':
                     // TODO: validate the token
-                    // TODO: instead of handling the event directly, publish it to SQS
-                    await handleEvent(req)
+                    await publishToQueue(nconf.get('EVENT_QUEUE'), req.body)
                     res.json({ status: 'ok' })
                     break
 
@@ -54,6 +51,7 @@ module.exports = function(app) {
             }
 
         } catch (err) {
+            logger.error(err.message)
             res.status(500).json({
                 status: 'error',
                 errorCode: 'GENERAL_ERROR',
@@ -63,42 +61,23 @@ module.exports = function(app) {
 
     })
 
-    async function handleEvent(req) {
-        try {
-            logger.info(JSON.stringify(req.body))
 
-            if ('message' !== req.body.event.type) {
-                throw new Error(`I don't support this event type: ${req.body.event.type}`)
+    function publishToQueue(queueName, message) {
+        return new Promise((fulfill, reject) => {
+
+            logger.info(`Publishing message to queue ${queueName}`)
+
+            const params = {
+                MessageBody: JSON.stringify(message),
+                QueueUrl: queueName
             }
 
-            if ('bot_message' === req.body.event.subtype) {
-                 throw new Error(`We don't serve your kind here!`)
-            }
+            sqs.sendMessage(params, (err, data) => {
+                if (err) reject(err)
+                else fulfill(data)
+            })
 
-            // user - the ID of the user who sent the message
-            // channel - the ID of the channel where the message was posted
-            // text - the text of the message
-            const { user, text, channel } = req.body.event
-
-            // TODO: handle the event here based on text
-            logger.info('User ID: ' + user)
-            logger.info('Channel ID: ' + channel)
-            logger.info('Text: ' + text)
-
-            // ignore messages not starting with 'bot'
-            if (!text.startsWith('bot')) {
-                throw new Error('This does not concern me')
-            }
-
-            // return message to Slack
-            const responseText = `The answer to your query (${text}) is 42`
-            const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${encodeURIComponent(responseText)}`
-            const response = await axios.post(uri)
-
-        } catch (err) {
-            logger.warn(err.message)
-        }
-
+        })
     }
 
 }
