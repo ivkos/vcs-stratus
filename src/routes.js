@@ -92,7 +92,7 @@ module.exports = function(app) {
 
             // return message to Slack
             const responseText = `The answer to your query (${text}) is 42`
-            const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${responseText}`
+            const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${encodeURIComponent(responseText)}`
             const response = await axios.post(uri)
 
         } catch (err) {
