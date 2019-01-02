@@ -31,6 +31,7 @@ module.exports = function(app) {
                 // please Slack with "swift response"
                 case 'event_callback':
                     // TODO: validate the token
+                    // TODO: instead of handling the event directly, publish it to SQS
                     await handleEvent(req)
                     res.json({ status: 'ok' })
                     break
@@ -84,15 +85,15 @@ module.exports = function(app) {
             logger.info('Channel ID: ' + channel)
             logger.info('Text: ' + text)
 
-            // Ignore messages not starting with 'bot'
+            // ignore messages not starting with 'bot'
             if (!text.startsWith('bot')) {
                 throw new Error('This does not concern me')
             }
 
-            let response = await axios.post(SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}`, {
-                text: `The answer to your query (${text}) is 42`,
-            })
-            logger.info(response.data)
+            // return message to Slack
+            const responseText = `The answer to your query (${text}) is 42`
+            const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${responseText}`
+            const response = await axios.post(uri)
 
         } catch (err) {
             logger.warn(err.message)
