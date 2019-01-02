@@ -30,18 +30,10 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Dialogflow API Key
-  SlackAppId:
-    Type: String
-  SlackClientId:
-    Type: String
-  SlackClientSecret:
+  BotUserToken:
     NoEcho: true
     Type: String
-  SlackSigningSecret:
-    NoEcho: true
-    Type: String
-  SlackVerificationToken:
-    Type: String
+    Description: Bot User OAuth Access Token
 
 
 Resources:
@@ -151,11 +143,7 @@ Resources:
           BROKER_KEY: !Ref BrokerKey
           BROKER_SECRET: !Ref BrokerSecret
           DIALOGFLOW_API_KEY: !Ref DialogflowApiKey
-          SLACK_APP_ID: !Ref SlackAppId
-          SLACK_CLIENT_ID: !Ref SlackClientId
-          SLACK_CLIENT_SECRET: !Ref SlackClientSecret
-          SLACK_SIGNING_SECRET: !Ref SlackSigningSecret
-          SLACK_VERIFICATION_TOKEN: !Ref SlackVerificationToken
+          BOT_USER_TOKEN: !Ref BotUserToken
       Events:
         ProxyApiRoot:
           Type: Api

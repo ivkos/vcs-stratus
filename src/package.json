@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha tests/unit/",
     "package": "sam package --template-file ../template.yaml --output-template-file ../packaged.yaml --s3-bucket $Bucket",
-    "deploy": "sam deploy --template-file ../packaged.yaml --stack-name $Stack --capabilities CAPABILITY_IAM --parameter-overrides BrokerURI=$BrokerURI BrokerKey=$BrokerKey BrokerSecret=$BrokerSecret DialogflowApiKey=$DialogflowApiKey SlackAppId=$SlackAppId SlackClientId=$SlackClientId SlackClientSecret=$SlackClientSecret SlackSigningSecret=$SlackSigningSecret=$SlackVerificationToken=$SlackVerificationToken",
+    "deploy": "sam deploy --template-file ../packaged.yaml --stack-name $Stack --capabilities CAPABILITY_IAM --parameter-overrides BrokerURI=$BrokerURI BrokerKey=$BrokerKey BrokerSecret=$BrokerSecret BotUserToken=$BotUserToken DialogflowApiKey=$DialogflowApiKey",
     "output": "aws cloudformation describe-stacks --stack-name $Stack --query 'Stacks[].Outputs'"
   },
   "dependencies": {
