@@ -33,6 +33,10 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Bot User OAuth Access Token
+  SlackSigningSecret:
+    NoEcho: true
+    Type: String
+    Description: Slack Signing Secret
 
 
 Resources:
@@ -103,6 +107,7 @@ Resources:
       Environment:
         Variables:
           EVENT_QUEUE: !Ref EventQueue
+          SLACK_SIGNING_SECRET: !Ref SlackSigningSecret
       Policies:
         - SQSSendMessagePolicy:
             QueueName:

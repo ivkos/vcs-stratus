@@ -2,9 +2,7 @@ const nconf = require('nconf')
 nconf.env()
 
 const express = require('express')
-const bodyParser = require('body-parser')
 const morgan = require('morgan')
-const cors = require('cors')
 const AWS = require('aws-sdk')
 const Promise = require('bluebird')
 
@@ -19,10 +17,7 @@ const sqs = new AWS.SQS()
 const app = express()
 
 // setup middleware
-app.use(cors())
 app.use(morgan('combined', { 'stream': logger.stream }))
-app.use(bodyParser.json({ limit: '50mb' }))
-app.use(bodyParser.urlencoded({ extended: false }))
 
 // route all requests to routes
 routes(sqs, app)

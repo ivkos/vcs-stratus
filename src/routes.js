@@ -1,66 +1,31 @@
 const express = require('express')
 const nconf = require('nconf')
+const { createEventAdapter } = require('@slack/events-api');
 const { logger, } = require('./lib')
 
-
 module.exports = function(sqs, app) {
+
+    const slackEvents = createEventAdapter(nconf.get('SLACK_SIGNING_SECRET'), { waitForResponse: true })
 
     const router = express.Router()
     app.use('/', router)
 
-    router.get('/', async (req, res, next) => {
-        res.json({ status: 'ok'})
-    })
+    router.post('/slack/events', slackEvents.expressMiddleware())
 
-    router.post('/', async (req, res, next) => {
+    slackEvents.on('message', async (event, respond) => {
         try {
-
-            switch (req.body.type) {
-
-                // verification URL is used to ensure the endpoint is valid
-                // and trusted by Slack
-                case 'url_verification':
-                    res.send(req.body.challenge)
-                    // TODO: save the token
-                    break
-
-                // typical event callback
-                // always respond with 200 in order to
-                // please Slack with "swift response"
-                case 'event_callback':
-                    // TODO: validate the token
-                    await publishToQueue(nconf.get('EVENT_QUEUE'), req.body)
-                    res.json({ status: 'ok' })
-                    break
-
-                // well, we are rate limited.
-                // c'est la vie :(
-                case 'app_rate_limited':
-                    // TODO: validate the token
-                    res.json({ status: 'ok' })
-                    break
-
-                // by default respond with 400
-                // for invalid event types
-                default:
-                    res.status(400).json({
-                        status: 'error',
-                        errorCode: 'INVALID_EVENT_TYPE',
-                        errorMessage: 'Invalid event type'
-                    })
-            }
-
+            logger.info(`Received a message event: user ${event.user} in channel ${event.channel} says ${event.text}`);
+            await publishToQueue(nconf.get('EVENT_QUEUE'), event)
+            respond(null)
         } catch (err) {
-            logger.error(err.message)
-            res.status(500).json({
-                status: 'error',
-                errorCode: 'GENERAL_ERROR',
-                errorMessage: err.message
-            })
+            respond(err)
         }
-
     })
 
+    slackEvents.on('error', (err, respond) => {
+        logger.error(err)
+        respond(err)
+    })
 
     function publishToQueue(queueName, message) {
         return new Promise((fulfill, reject) => {

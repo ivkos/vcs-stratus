@@ -1,7 +1,8 @@
 // configuration
 const nconf = require('nconf')
 nconf.env().defaults({
-    EVENT_QUEUE: 'dummy-queue'
+    EVENT_QUEUE: 'dummy-queue',
+    SLACK_SIGNING_SECRET: 'dummy-secret'
 })
 
 const chai = require('chai')

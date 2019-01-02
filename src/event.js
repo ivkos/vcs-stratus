@@ -12,18 +12,18 @@ async function handleEvent(e) {
         logger.info('Slack event: ' + e)
         const body = JSON.parse(e)
 
-        if ('message' !== body.event.type) {
-            throw new Error(`I don't support this event type: ${body.event.type}`)
+        if ('message' !== body.type) {
+            throw new Error(`I don't support this event type: ${body.type}`)
         }
 
-        if ('bot_message' === body.event.subtype) {
+        if ('bot_message' === body.subtype) {
              throw new Error(`We don't serve your kind here!`)
         }
 
         // user - the ID of the user who sent the message
         // channel - the ID of the channel where the message was posted
         // text - the text of the message
-        const { user, text, channel } = body.event
+        const { user, text, channel } = body
 
         // TODO: handle the event here based on text
         logger.info('User ID: ' + user)
