@@ -68,3 +68,6 @@ packaged.yaml
 
 # Ignore files
 .ignore
+
+# Secrets directory
+secrets/

@@ -25,10 +25,12 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Secret code of Here app.
-  DialogflowApiKey:
-    NoEcho: true
+  DialogflowProjectId:
     Type: String
-    Description: Dialogflow API Key
+    Description: Dialogflow Project ID
+  GoogleApplicationCredentialsFilename:
+    Type: String
+    Description: File name of the JSON file that contains your service account key
   BotUserToken:
     NoEcho: true
     Type: String
@@ -140,7 +142,8 @@ Resources:
           BROKER_URI: !Ref BrokerURI
           BROKER_KEY: !Ref BrokerKey
           BROKER_SECRET: !Ref BrokerSecret
-          DIALOGFLOW_API_KEY: !Ref DialogflowApiKey
+          DIALOGFLOW_PROJECT_ID: !Ref DialogflowProjectId
+          GOOGLE_APPLICATION_CREDENTIALS_FILENAME: !Ref GoogleApplicationCredentialsFilename
           BOT_USER_TOKEN: !Ref BotUserToken
       Events:
         MessageEvent:
