@@ -66,7 +66,7 @@ async function handleEvent(e) {
                 await sendMessage(channel, fulfillmentText)
             } else {
                 await sendMessage(channel, "I don't know what you mean")
-	    }
+            }
         }
 
     } catch (err) {
