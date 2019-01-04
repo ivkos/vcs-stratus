@@ -16,13 +16,7 @@ async function handleEvent(e) {
         logger.info('Slack event: ' + e)
         const body = JSON.parse(e)
 
-        if ('message' !== body.type) {
-            throw new Error(`I don't support this event type: ${body.type}`)
-        }
-
-        if ('bot_message' === body.subtype) {
-             throw new Error(`We don't serve your kind here!`)
-        }
+        validateMessageType(body)
 
         // user - the ID of the user who sent the message
         // channel - the ID of the channel where the message was posted
@@ -83,6 +77,16 @@ async function sendMessage(channel, message) {
     const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${encodeURIComponent(message)}`
     const response = await axios.post(uri)
     logger.info('Slack response: ' + JSON.stringify(response.data))
+}
+
+function validateMessageType(message) {
+    if ('message' !== message.type) {
+        throw new Error(`I don't support this event type: ${message.type}`)
+    }
+
+    if ('bot_message' === message.subtype) {
+        throw new Error(`We don't serve your kind here!`)
+    }
 }
 
 exports.handler = async function (event, context) {

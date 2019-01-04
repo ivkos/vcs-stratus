@@ -35,6 +35,23 @@ const MESSAGE_CHANNEL = {
     channel_type: "channel"
 }
 
+const MESSAGE_BOT = {
+    "type": "message",
+    "subtype": "bot_message",
+    "ts": "1358877455.000010",
+    "text": "Pushing is the answer",
+    "bot_id": "BB12033",
+    "username": "github",
+    "icons": {}
+}
+
+const EVENT_EMOJI_CHANGED = {
+    "type": "emoji_changed",
+    "subtype": "remove",
+    "names": ["picard_facepalm"],
+    "event_ts" : "1361482916.000004"
+}
+
 describe("sendMessage", function () {
     beforeEach(() => moxios.install())
     afterEach(() => moxios.uninstall())
@@ -93,6 +110,28 @@ describe("sendMessage", function () {
         params.get("channel").should.equal(MESSAGE_CHANNEL.channel)
         params.get("text").should.equal(MESSAGE_CHANNEL.text)
         params.get("token").should.equal(nconf.get("BOT_USER_TOKEN"))
+    })
+})
+
+describe("validateMessageType", function () {
+    const validateMessageType = event.__get__("validateMessageType")
+
+    it("should throw for bot message", function () {
+        expect(() => validateMessageType(MESSAGE_BOT))
+            .to.throw()
+    })
+
+    it("should throw for non-message", function () {
+        expect(() => validateMessageType(EVENT_EMOJI_CHANGED))
+            .to.throw()
+    })
+
+    it("should accept IM message", function () {
+        validateMessageType(MESSAGE_IM)
+    })
+
+    it("should accept channel message", function () {
+        validateMessageType(MESSAGE_CHANNEL)
     })
 })
 
