@@ -9,8 +9,9 @@ const should = chai.should()
 const expect = chai.expect
 const moxios = require('moxios')
 const url = require('url')
+const rewire = require('rewire')
 
-const event = require('../../event')
+const event = rewire('../../event')
 
 const MESSAGE_IM = {
     client_msg_id: "36110ae8-1390-4be7-a62b-f3ee1e366c9b",
@@ -34,12 +35,72 @@ const MESSAGE_CHANNEL = {
     channel_type: "channel"
 }
 
-describe('event.js', function () {
-
+describe("sendMessage", function () {
     beforeEach(() => moxios.install())
     afterEach(() => moxios.uninstall())
 
-    it('channel message', async () => {
+    it("should throw for empty message", async () => {
+        const sendMessage = event.__get__("sendMessage")
+
+        try {
+            await sendMessage("DEBB19E1K", "")
+        } catch (err) {
+            return
+        }
+
+        throw new Error("Failed")
+    })
+
+    it("should throw for empty channel", async () => {
+        const sendMessage = event.__get__("sendMessage")
+
+        try {
+            await sendMessage("", "some message")
+        } catch (err) {
+            return
+        }
+
+        throw new Error("Failed")
+    })
+
+    it("should send the message", async () => {
+        let params = null
+        moxios.wait(() => {
+            let request = moxios.requests.mostRecent()
+            params = new url.URLSearchParams(url.parse(request.url).query)
+            request.respondWith({
+                status: 200,
+                response: {
+                    ok: true,
+                    channel: params.get("channel"),
+                    ts: Date.now().toString(),
+                    message: {
+                        text: params.get("text"),
+                        username: "ecto1",
+                        bot_id: "B19LU7CSY",
+                        attachments: [],
+                        type: "message",
+                        subtype: "bot_message",
+                        ts: Date.now().toString(),
+                    },
+                },
+            })
+        })
+
+        const sendMessage = event.__get__("sendMessage")
+        await sendMessage(MESSAGE_CHANNEL.channel, MESSAGE_CHANNEL.text)
+
+        params.get("channel").should.equal(MESSAGE_CHANNEL.channel)
+        params.get("text").should.equal(MESSAGE_CHANNEL.text)
+        params.get("token").should.equal(nconf.get("BOT_USER_TOKEN"))
+    })
+})
+
+describe('handler', function () {
+    beforeEach(() => moxios.install())
+    afterEach(() => moxios.uninstall())
+
+    it('should respond to channel message', async () => {
 
         let params = null
 
@@ -71,7 +132,7 @@ describe('event.js', function () {
 
     })
 
-    it('direct message', async () => {
+    it('should respond to direct message', async () => {
 
         let params = null
 

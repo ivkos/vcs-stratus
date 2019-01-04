@@ -77,6 +77,9 @@ async function handleEvent(e) {
 }
 
 async function sendMessage(channel, message) {
+    if (!channel) throw new Error("channel must not be empty")
+    if (!message) throw new Error("message must not be empty")
+
     const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${encodeURIComponent(message)}`
     const response = await axios.post(uri)
     logger.info('Slack response: ' + JSON.stringify(response.data))
