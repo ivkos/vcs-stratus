@@ -41,7 +41,8 @@ async function handleEvent(e) {
 
         const sessionClient = new dialogflow.SessionsClient({
             keyFilename: path.join(__dirname, 'secrets', nconf.get('GOOGLE_APPLICATION_CREDENTIALS_FILENAME'))
-	})
+        })
+
         const sessionPath = sessionClient.sessionPath(nconf.get('DIALOGFLOW_PROJECT_ID'), uuid.v4())
         const dialogflowRequest = {
             session: sessionPath,
