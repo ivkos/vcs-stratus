@@ -9,6 +9,9 @@ const dialogflow = require('dialogflow')
 const uuid = require('uuid')
 const path = require('path')
 
+const MESSAGE_PREFIX = "bot"
+const MESSAGE_PREFIX_REGEX = new RegExp("^" + MESSAGE_PREFIX + "(?:[\\s,.?!;-]+(.*))?$", "i")
+
 async function handleEvent(e) {
 
     try {
@@ -28,10 +31,7 @@ async function handleEvent(e) {
         logger.info('Channel ID: ' + channel)
         logger.info('Text: ' + text)
 
-        // ignore messages not starting with 'bot'
-        if (!text.startsWith('bot')) {
-            throw new Error('This does not concern me')
-        }
+        const message = checkAddresseeAndGetMessage(text)
 
         const sessionClient = new dialogflow.SessionsClient({
             keyFilename: path.join(__dirname, 'secrets', nconf.get('GOOGLE_APPLICATION_CREDENTIALS_FILENAME'))
@@ -41,7 +41,7 @@ async function handleEvent(e) {
         const dialogflowRequest = {
             session: sessionPath,
             queryInput: {
-                text: { text: text, languageCode: 'en-US' },
+                text: { text: message, languageCode: 'en-US' },
             },
         }
 
@@ -87,6 +87,26 @@ function validateMessageType(message) {
     if ('bot_message' === message.subtype) {
         throw new Error(`We don't serve your kind here!`)
     }
+}
+
+/**
+ * @param {string} text
+ * @return {string} the message without the prefix
+ */
+function checkAddresseeAndGetMessage(text) {
+    if (!text) throw new Error("text must not be empty")
+
+    const trimmedText = text.trim()
+
+    const matches = trimmedText.match(MESSAGE_PREFIX_REGEX)
+    if (matches === null) {
+        throw new Error("This does not concern me")
+    }
+
+    const message = matches[1] ? matches[1].trim() : ""
+    if (!message) return matches[0]
+
+    return message.trim()
 }
 
 exports.handler = async function (event, context) {

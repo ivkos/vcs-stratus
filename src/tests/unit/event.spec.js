@@ -135,6 +135,72 @@ describe("validateMessageType", function () {
     })
 })
 
+describe("checkAddresseeAndGetMessage", function () {
+    const checkAddresseeAndGetMessage = event.__get__("checkAddresseeAndGetMessage")
+
+    it("should throw for empty message", function () {
+        try {
+            checkAddresseeAndGetMessage("")
+        } catch(err) {
+            return
+        }
+
+        throw new Error("Failed")
+    })
+
+    it("should throw for message not directed to bot", function () {
+        try {
+            checkAddresseeAndGetMessage("Guys check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+        } catch(err) {
+            return
+        }
+
+        throw new Error("Failed")
+    })
+
+    it("should throw for message beginning with the prefix with no boundary", function () {
+        try {
+            checkAddresseeAndGetMessage("Botswana is the best country")
+        } catch(err) {
+            return
+        }
+
+        throw new Error("Failed")
+    })
+
+    context("when message is directed at bot", () => {
+        it("should accept lower case prefix", () => {
+            expect(checkAddresseeAndGetMessage("bot hello")).to.equal("hello")
+        })
+
+        it("should accept upper case prefix", function () {
+            expect(checkAddresseeAndGetMessage("Bot how are you")).to.equal("how are you")
+        })
+
+        it("should accept prefix when delimited by comma", function () {
+            expect(checkAddresseeAndGetMessage("Bot, how you doin?")).to.equal("how you doin?")
+        })
+
+        it("should accept prefix regardless of case", function () {
+            expect(checkAddresseeAndGetMessage("bOt cHanGe tHe CoLoR to ReD")).to.equal("cHanGe tHe CoLoR to ReD")
+        })
+
+        it("should return trimmed message", function () {
+            expect(checkAddresseeAndGetMessage("bot   hello ")).to.equal("hello")
+        })
+
+        it("should return the prefix if message after it is empty", function () {
+            expect(checkAddresseeAndGetMessage("Bot?")).to.equal("Bot?")
+            expect(checkAddresseeAndGetMessage("Bot")).to.equal("Bot")
+            expect(checkAddresseeAndGetMessage("Bot ")).to.equal("Bot")
+            expect(checkAddresseeAndGetMessage(" Bot ")).to.equal("Bot")
+            expect(checkAddresseeAndGetMessage(" Bot? ")).to.equal("Bot?")
+            expect(checkAddresseeAndGetMessage("bot!!!")).to.equal("bot!!!")
+        })
+    })
+})
+
+
 describe('handler', function () {
     beforeEach(() => moxios.install())
     afterEach(() => moxios.uninstall())
