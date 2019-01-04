@@ -71,3 +71,6 @@ packaged.yaml
 
 # Secrets directory
 secrets/
+
+# JetBrains
+.idea/
