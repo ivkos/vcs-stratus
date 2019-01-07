@@ -3,6 +3,8 @@ nconf.env()
 
 const axios = require('axios')
 const { logger, } = require('./lib')
+const { dispatchIntent } = require("./dispatch")
+
 const SLACK_URL = 'https://slack.com/api/chat.postMessage'
 
 const dialogflow = require('dialogflow')
@@ -55,6 +57,8 @@ async function handleEvent(e) {
             if (fulfillmentText) {
                 await sendMessage(channel, fulfillmentText)
             }
+
+            await dispatchIntent(result)
         } else {
             logger.warn("Did not match any intent")	
             if (fulfillmentText) {

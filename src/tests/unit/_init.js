@@ -4,6 +4,8 @@ nconf.env().defaults({
     EVENT_QUEUE: 'dummy-queue',
     BOT_USER_TOKEN: 'xoxb-XXXXXXXXXXXX-TTTTTTTTTTTTTT',
     SLACK_SIGNING_SECRET: '12345678901234567890123456789012',
+    DIALOGFLOW_PROJECT_ID: "stratus-1337af",
+    INTENT_ID_CHANGE_COLOR: "f8008532-a18c-451d-94b9-c584ff2e6076",
 })
 
 const chai = require('chai')

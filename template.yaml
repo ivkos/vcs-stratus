@@ -39,6 +39,9 @@ Parameters:
     NoEcho: true
     Type: String
     Description: Slack Signing Secret
+  IntentIdChangeColor:
+    Type: String
+    Description: Dialogflow ID (UUID) of the Change Color intent
 
 
 Resources:
@@ -145,6 +148,7 @@ Resources:
           DIALOGFLOW_PROJECT_ID: !Ref DialogflowProjectId
           GOOGLE_APPLICATION_CREDENTIALS_FILENAME: !Ref GoogleApplicationCredentialsFilename
           BOT_USER_TOKEN: !Ref BotUserToken
+          INTENT_ID_CHANGE_COLOR: !Ref IntentIdChangeColor
       Events:
         MessageEvent:
           Type: SQS
