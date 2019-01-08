@@ -65,7 +65,7 @@ describe("sendMessage", function () {
             return
         }
 
-        throw new Error("Failed")
+        throw new Error("It did not throw")
     })
 
     it("should throw for empty channel", async () => {
@@ -77,7 +77,7 @@ describe("sendMessage", function () {
             return
         }
 
-        throw new Error("Failed")
+        throw new Error("It did not throw")
     })
 
     it("should send the message", async () => {
@@ -139,33 +139,18 @@ describe("checkAddresseeAndGetMessage", function () {
     const checkAddresseeAndGetMessage = event.__get__("checkAddresseeAndGetMessage")
 
     it("should throw for empty message", function () {
-        try {
-            checkAddresseeAndGetMessage("")
-        } catch(err) {
-            return
-        }
-
-        throw new Error("Failed")
+        expect(() => checkAddresseeAndGetMessage(""))
+            .to.throw()
     })
 
     it("should throw for message not directed to bot", function () {
-        try {
-            checkAddresseeAndGetMessage("Guys check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ")
-        } catch(err) {
-            return
-        }
-
-        throw new Error("Failed")
+        expect(() => checkAddresseeAndGetMessage("Guys check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ"))
+            .to.throw()
     })
 
     it("should throw for message beginning with the prefix with no boundary", function () {
-        try {
-            checkAddresseeAndGetMessage("Botswana is the best country")
-        } catch(err) {
-            return
-        }
-
-        throw new Error("Failed")
+        expect(() => checkAddresseeAndGetMessage("Botswana is the best country"))
+            .to.throw()
     })
 
     context("when message is directed at bot", () => {
