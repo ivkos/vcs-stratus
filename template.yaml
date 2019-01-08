@@ -31,6 +31,12 @@ Parameters:
   GoogleApplicationCredentialsFilename:
     Type: String
     Description: File name of the JSON file that contains your service account key
+  GoogleCseId:
+    Type: String
+    Description: ID of the Google Custom Search Engine
+  GoogleCseApiKey:
+    NoEcho: true
+    Description: API Key for accessing Google Custom Search API
   BotUserToken:
     NoEcho: true
     Type: String
@@ -147,6 +153,8 @@ Resources:
           BROKER_SECRET: !Ref BrokerSecret
           DIALOGFLOW_PROJECT_ID: !Ref DialogflowProjectId
           GOOGLE_APPLICATION_CREDENTIALS_FILENAME: !Ref GoogleApplicationCredentialsFilename
+          GOOGLE_CSE_ID: !Ref GoogleCseId
+          GOOGLE_CSE_API_KEY: !Ref GoogleCseApiKey
           BOT_USER_TOKEN: !Ref BotUserToken
           INTENT_ID_CHANGE_COLOR: !Ref IntentIdChangeColor
       Events:
