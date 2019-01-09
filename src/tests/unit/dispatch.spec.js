@@ -74,23 +74,13 @@ describe("dispatchIntent", function () {
     const getIntentConsumerByIntentId = dispatch.__get__("getIntentConsumerByIntentId")
 
     it("should throw for missing queryResult", async () => {
-        try {
-            await dispatchIntent(undefined, SAMPLE_CONTEXT)
-        } catch (err) {
-            return
-        }
-
-        throw new Error("It did not throw")
+        await expect(dispatchIntent(undefined, SAMPLE_CONTEXT))
+            .to.be.rejected
     })
 
     it("should throw for missing chatContext", async () => {
-        try {
-            await dispatchIntent({}, undefined)
-        } catch (err) {
-            return
-        }
-
-        throw new Error("It did not throw")
+        await expect(dispatchIntent({}, undefined))
+            .to.be.rejected
     })
 
     it("should throw for unknown intent", async () => {
@@ -137,13 +127,10 @@ describe("dispatchIntent", function () {
             languageCode: "en-us",
         }
 
-        try {
-            await dispatchIntent(QUERY_RESULT_WITH_UNKNOWN_INTENT_ID, SAMPLE_CONTEXT)
-        } catch(err) {
-            return
-        }
-
-        throw new Error("It did not throw")
+        await expect(dispatchIntent(
+            QUERY_RESULT_WITH_UNKNOWN_INTENT_ID,
+            SAMPLE_CONTEXT,
+        )).to.be.rejected
     })
 
     it("should call the IntentConsumer's consume method", async ()  => {

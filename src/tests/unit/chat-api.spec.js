@@ -24,23 +24,13 @@ describe("sendMessage", function () {
     afterEach(() => moxios.uninstall())
 
     it("should throw for empty message", async () => {
-        try {
-            await sendMessage("DEBB19E1K", "")
-        } catch (err) {
-            return
-        }
-
-        throw new Error("It did not throw")
+        await expect(sendMessage("DEBB19E1K", ""))
+            .to.be.rejected
     })
 
     it("should throw for empty channel", async () => {
-        try {
-            await sendMessage("", "some message")
-        } catch (err) {
-            return
-        }
-
-        throw new Error("It did not throw")
+        await expect(sendMessage("", "some message"))
+            .to.be.rejected
     })
 
     it("should send the message", async () => {
