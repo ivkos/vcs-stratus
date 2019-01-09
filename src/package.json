@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha --recursive --file ./tests/unit/_init.js tests/unit/",
     "package": "sam package --template-file ../template.yaml --output-template-file ../packaged.yaml --s3-bucket $Bucket",
-    "deploy": "sam deploy --template-file ../packaged.yaml --stack-name $Stack --capabilities CAPABILITY_IAM --parameter-overrides BrokerURI=$BrokerURI BrokerKey=$BrokerKey BrokerSecret=$BrokerSecret BotUserToken=$BotUserToken SlackSigningSecret=$SlackSigningSecret DialogflowProjectId=$DialogflowProjectId GoogleApplicationCredentialsFilename=$GoogleApplicationCredentialsFilename",
+    "deploy": "sam deploy --template-file ../packaged.yaml --stack-name $Stack --capabilities CAPABILITY_IAM --parameter-overrides BrokerURI=$BrokerURI BrokerKey=$BrokerKey BrokerSecret=$BrokerSecret BotUserToken=$BotUserToken SlackSigningSecret=$SlackSigningSecret DialogflowProjectId=$DialogflowProjectId GoogleApplicationCredentialsFilename=$GoogleApplicationCredentialsFilename GoogleCseId=$GoogleCseId GoogleCseApiKey=$GoogleCseApiKey IntentIdChangeColor=$IntentIdChangeColor",
     "output": "aws cloudformation describe-stacks --stack-name $Stack --query 'Stacks[].Outputs'"
   },
   "dependencies": {
