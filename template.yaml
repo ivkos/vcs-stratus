@@ -36,6 +36,7 @@ Parameters:
     Description: ID of the Google Custom Search Engine
   GoogleCseApiKey:
     NoEcho: true
+    Type: String
     Description: API Key for accessing Google Custom Search API
   BotUserToken:
     NoEcho: true
