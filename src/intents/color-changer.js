@@ -7,6 +7,7 @@ const chroma = require("chroma-js")
 const GoogleImages = require("google-images")
 const vision = require("@google-cloud/vision")
 const path = require("path")
+const nconf = require("nconf")
 
 const COLOR_SIMILARITY_THRESHOLD = 0.70
 const MAX_IMAGE_COUNT = 20
