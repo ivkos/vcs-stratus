@@ -9,6 +9,12 @@ const { IntentConsumer } = require("../../intent-consumer")
 
 const dispatch = rewire("../../dispatch")
 
+const SAMPLE_CONTEXT = {
+    text: "some text",
+    channelId: "C1234",
+    userId: "U1234"
+}
+
 describe("getIntentIdByIntentName", function () {
     const getIntentIdByIntentName = dispatch.__get__("getIntentIdByIntentName")
 
@@ -69,7 +75,17 @@ describe("dispatchIntent", function () {
 
     it("should throw for missing queryResult", async () => {
         try {
-            await dispatchIntent(undefined)
+            await dispatchIntent(undefined, SAMPLE_CONTEXT)
+        } catch (err) {
+            return
+        }
+
+        throw new Error("It did not throw")
+    })
+
+    it("should throw for missing chatContext", async () => {
+        try {
+            await dispatchIntent({}, undefined)
         } catch (err) {
             return
         }
@@ -122,7 +138,7 @@ describe("dispatchIntent", function () {
         }
 
         try {
-            await dispatchIntent(QUERY_RESULT_WITH_UNKNOWN_INTENT_ID)
+            await dispatchIntent(QUERY_RESULT_WITH_UNKNOWN_INTENT_ID, SAMPLE_CONTEXT)
         } catch(err) {
             return
         }
@@ -193,8 +209,8 @@ describe("dispatchIntent", function () {
         consumer.consume = consumeSpy // overwrite original fn
 
         try {
-            await dispatchIntent(SAMPLE_QUERY_RESULT)
-            expect(consumeSpy).to.have.been.calledWithExactly(SAMPLE_QUERY_RESULT)
+            await dispatchIntent(SAMPLE_QUERY_RESULT, SAMPLE_CONTEXT)
+            expect(consumeSpy).to.have.been.calledWith(SAMPLE_QUERY_RESULT, SAMPLE_CONTEXT)
         } finally {
             // restore original fns
             consumer.consume = originalConsume

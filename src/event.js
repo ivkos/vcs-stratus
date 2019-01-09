@@ -1,12 +1,9 @@
 const nconf = require('nconf')
 nconf.env()
 
-const axios = require('axios')
+const { sendMessage } = require("./chat-api")
 const { logger, } = require('./lib')
 const { dispatchIntent } = require("./dispatch")
-
-const SLACK_URL = 'https://slack.com/api/chat.postMessage'
-
 const dialogflow = require('dialogflow')
 const uuid = require('uuid')
 const path = require('path')
@@ -58,7 +55,11 @@ async function handleEvent(e) {
                 await sendMessage(channel, fulfillmentText)
             }
 
-            await dispatchIntent(result)
+            await dispatchIntent(result, {
+                userId: user,
+                channelId: channel,
+                text: text
+            })
         } else {
             logger.warn("Did not match any intent")	
             if (fulfillmentText) {
@@ -72,15 +73,6 @@ async function handleEvent(e) {
         logger.warn(err.message)
     }
 
-}
-
-async function sendMessage(channel, message) {
-    if (!channel) throw new Error("channel must not be empty")
-    if (!message) throw new Error("message must not be empty")
-
-    const uri = SLACK_URL + `?channel=${channel}&token=${nconf.get('BOT_USER_TOKEN')}&text=${encodeURIComponent(message)}`
-    const response = await axios.post(uri)
-    logger.info('Slack response: ' + JSON.stringify(response.data))
 }
 
 function validateMessageType(message) {

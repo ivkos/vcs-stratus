@@ -13,7 +13,7 @@ const COLOR_SIMILARITY_THRESHOLD = 0.70
 const MAX_IMAGE_COUNT = 20
 
 class CumulusColorChanger extends IntentConsumer {
-    async consume(queryResult) {
+    async consume(queryResult, chatContext, respond) {
         if (!queryResult.allRequiredParamsPresent) {
             throw new Error("Not all required params are present")
         }
@@ -23,10 +23,16 @@ class CumulusColorChanger extends IntentConsumer {
             "parameters.fields.color.stringValue",
         )
 
-        const matchedColor = await this.findColor(desiredColor)
-        logger.info(`Changing color to ${matchedColor}`)
+        try {
+            const matchedColor = await this.findColor(desiredColor)
+            logger.info(`Changing color to ${matchedColor}`)
 
-        // TODO Call Open IoT to change Cumulus color
+            // TODO Call Open IoT to change Cumulus color
+
+            await respond(`Successfully changed the color to ${desiredColor} (${matchedColor})`)
+        } catch (err) {
+            await respond("Sorry, something went wrong while changing the color :confused:")
+        }
     }
 
     /**
@@ -43,7 +49,7 @@ class CumulusColorChanger extends IntentConsumer {
 
         try {
             return chroma(query).hex()
-        } catch(err) {
+        } catch (err) {
             // ignore
         }
 

@@ -1,6 +1,6 @@
 const nconf = require("nconf")
 const { logger } = require("./lib")
-
+const { createRespondFunction } = require("./chat-api")
 
 const INTENT_ID_TO_CONSUMER_PROVIDER_MAP = {
     [nconf.get("INTENT_ID_CHANGE_COLOR")]: () => {
@@ -12,10 +12,12 @@ const INTENT_ID_TO_CONSUMER_PROVIDER_MAP = {
 
 /**
  * @param {QueryResult} queryResult
+ * @param {{userId: string, channelId: string, text: string}} chatContext
  * @returns {Promise<void>}
  */
-async function dispatchIntent(queryResult) {
+async function dispatchIntent(queryResult, chatContext) {
     if (!queryResult) throw new Error("Missing queryResult")
+    if (!chatContext) throw new Error("Missing chatContext")
 
     const intentDisplayName = queryResult.intent.displayName
     const intentId = getIntentIdByIntentName(queryResult.intent.name)
@@ -29,7 +31,11 @@ async function dispatchIntent(queryResult) {
     logger.info(`Dispatching to ${consumerName} intent '${intentDisplayName}' (${intentId})`)
 
     try {
-        return consumer.consume(queryResult)
+        return consumer.consume(
+            queryResult,
+            chatContext,
+            createRespondFunction(chatContext.channelId),
+        )
     } catch (err) {
         logger.error(`Error occurred in intent consumer ${consumerName}`, err)
     }
