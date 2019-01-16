@@ -8,6 +8,7 @@ const GoogleImages = require("google-images")
 const vision = require("@google-cloud/vision")
 const path = require("path")
 const nconf = require("nconf")
+const axios = require("axios")
 
 const COLOR_SIMILARITY_THRESHOLD = 0.70
 const MAX_IMAGE_COUNT = 20
@@ -27,12 +28,55 @@ class CumulusColorChanger extends IntentConsumer {
             const matchedColor = await this.findColor(desiredColor)
             logger.info(`Changing color to ${matchedColor}`)
 
-            // TODO Call Open IoT to change Cumulus color
+            await this.sendChangeColorCommand(desiredColor)
 
             await respond(`Successfully changed the color to ${desiredColor} (${matchedColor})`)
         } catch (err) {
             await respond("Sorry, something went wrong while changing the color :confused:")
         }
+    }
+
+    /**
+     *
+     * @param {string} colorHex
+     * @return {Promise<void>}
+     */
+    async sendChangeColorCommand(colorHex) {
+        const rgb = chroma(colorHex).rgb()
+
+        await axios({
+            method: "POST",
+            url: this.getCommandEndpoint(),
+            auth: {
+                username: nconf.get("BROKER_KEY"),
+                password: nconf.get("BROKER_SECRET"),
+            },
+            data: this.getChangeColorCommand(...rgb),
+        })
+    }
+
+    /**
+     * @param {number} red
+     * @param {number} green
+     * @param {number} blue
+     * @return {{cmd: string, args: number[]}}
+     * @private
+     */
+    getChangeColorCommand(red, green, blue) {
+        return {
+            cmd: "CHANGE_COLOR",
+            args: [red, green, blue],
+        }
+    }
+
+    /**
+     * @return {string}
+     * @private
+     */
+    getCommandEndpoint() {
+        return `https://${nconf.get("BROKER_URI")}/api/publish` +
+            `/${nconf.get("CUMULUS_COMMAND_TOPIC")}` +
+            "?qos=1"
     }
 
     /**

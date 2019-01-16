@@ -1,6 +1,10 @@
 const chai = require("chai")
 const expect = chai.expect
 const sinon = require("sinon")
+const nconf = require("nconf")
+const moxios = require("moxios")
+const url = require("url")
+
 
 const { CumulusColorChanger } = require("../../../intents/color-changer")
 
@@ -392,5 +396,60 @@ describe("getTopImageUrls", function () {
         expect(result).to.not.include(nonJpegOrPngImageUrl)
 
         stub.restore()
+    })
+})
+
+describe("getCommandEndpoint", function () {
+    it("should return correct url", function () {
+        expect(colorChanger.getCommandEndpoint())
+            .to.equal(
+            `https://${nconf.get("BROKER_URI")}/api/publish` +
+            `/${nconf.get("CUMULUS_COMMAND_TOPIC")}` +
+            "?qos=1",
+        )
+    })
+})
+
+describe("getChangeColorCommand", function () {
+    it("should return correct command", function () {
+        const rgb = [123, 42, 69]
+
+        expect(colorChanger.getChangeColorCommand(...rgb)).to.deep.equal({
+            cmd: "CHANGE_COLOR",
+            args: rgb,
+        })
+    })
+})
+
+describe("sendChangeColorCommand", function () {
+    beforeEach(() => moxios.install())
+    afterEach(() => moxios.uninstall())
+
+    it("should throw for invalid colors", async function () {
+        await expect(colorChanger.sendChangeColorCommand("skybrown"))
+            .to.eventually.be.rejected
+    })
+
+    it("should succeed", async function () {
+        let params = null
+        let data = null
+        moxios.wait(() => {
+            const request = moxios.requests.mostRecent()
+
+            params = new url.URLSearchParams(url.parse(request.url).query)
+            data = request.config.data
+
+            request.respondWith({
+                status: 200, response: {
+                    "status": "ok",
+                    "data": {},
+                },
+            })
+        })
+
+        await colorChanger.sendChangeColorCommand("#ff0000")
+
+        expect(params.get("qos")).to.equal("1")
+        expect(JSON.parse(data)).to.deep.equal(colorChanger.getChangeColorCommand(255, 0, 0))
     })
 })

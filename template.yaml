@@ -49,6 +49,9 @@ Parameters:
   IntentIdChangeColor:
     Type: String
     Description: Dialogflow ID (UUID) of the Change Color intent
+  CumulusCommandTopic:
+    Type: String
+    Description: The topic that Cumulus listens on for commands
 
 
 Resources:
@@ -158,6 +161,7 @@ Resources:
           GOOGLE_CSE_API_KEY: !Ref GoogleCseApiKey
           BOT_USER_TOKEN: !Ref BotUserToken
           INTENT_ID_CHANGE_COLOR: !Ref IntentIdChangeColor
+          CUMULUS_COMMAND_TOPIC: !Ref CumulusCommandTopic
       Events:
         MessageEvent:
           Type: SQS

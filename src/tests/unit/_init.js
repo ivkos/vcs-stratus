@@ -6,6 +6,8 @@ nconf.env().defaults({
     SLACK_SIGNING_SECRET: '12345678901234567890123456789012',
     DIALOGFLOW_PROJECT_ID: "stratus-1337af",
     INTENT_ID_CHANGE_COLOR: "f8008532-a18c-451d-94b9-c584ff2e6076",
+    BROKER_URI: "broker.example.com",
+    CUMULUS_COMMAND_TOPIC: "bec539fe59154f84852777049bb0abd8/stratus/message"
 })
 
 const chai = require('chai')
