@@ -28,7 +28,7 @@ class CumulusColorChanger extends IntentConsumer {
             const matchedColor = await this.findColor(desiredColor)
             logger.info(`Changing color to ${matchedColor}`)
 
-            await this.sendChangeColorCommand(desiredColor)
+            await this.sendChangeColorCommand(matchedColor)
 
             await respond(`Successfully changed the color to ${desiredColor} (${matchedColor})`)
         } catch (err) {
